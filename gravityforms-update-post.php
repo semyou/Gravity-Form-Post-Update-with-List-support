@@ -35,7 +35,7 @@ class GFUpdatePost
         'request_id' => 'gform_post_id'
     , 'post_status' => 'default'
     , 'capabilities' => array(
-            'update' => 'default'
+            'update' => 'author'
         , 'delete' => 'disable'
         )
     , 'entries' => true
@@ -86,25 +86,25 @@ class GFUpdatePost
         if ($position == 700):
             ?>
 
-        <li class="post_custom_field_unique field_setting">
+            <li class="post_custom_field_unique field_setting">
 
-            <input type="checkbox" id="field_unique_custom_meta_value"
-                   onclick="SetFieldProperty('postCustomFieldUnique', this.checked);"/>
+                <input type="checkbox" id="field_unique_custom_meta_value"
+                       onclick="SetFieldProperty('postCustomFieldUnique', this.checked);"/>
 
-            <label for="field_unique_custom_meta_value" class="inline">
-                <?php _e('Unique Custom Field?'); ?>
-                <?php gform_tooltip('form_field_unique_custom_meta_value') ?>
-            </label>
+                <label for="field_unique_custom_meta_value" class="inline">
+                    <?php _e('Unique Custom Field?'); ?>
+                    <?php gform_tooltip('form_field_unique_custom_meta_value') ?>
+                </label>
 
-        </li>
+            </li>
 
         <?php
         endif;
     }
 
-    public function gform_editor_js()
-    {
-        ?>
+public function gform_editor_js()
+{
+    ?>
     <script type="text/javascript">
 
         var fieldTypes = [
@@ -120,8 +120,8 @@ class GFUpdatePost
         });
 
     </script>
-    <?php
-    }
+<?php
+}
 
     public function gform_tooltips($tooltips)
     {
@@ -152,7 +152,6 @@ class GFUpdatePost
     public function gform_pre_render($form)
     {
         $this->options['request_id'] = apply_filters($this->name . '_id', $this->options['request_id']);
-
         if ($this->is_allowed()) {
             $meta = get_post_custom($this->post['ID']);
 
@@ -183,8 +182,6 @@ class GFUpdatePost
 
     public function gform_populate_element($field, $field_type, $value, $value_index = false)
     {
-
-
         if ($value_index) {
             $new_value = array();
             foreach ($value as $object) {
@@ -220,8 +217,8 @@ class GFUpdatePost
                 break;
 
             case 'list':
-                $j=0;
-               $length=count($value);
+                $j = 0;
+                $length = count($value);
                 foreach ($value as $row) {
                     $list_entry = explode("|", $row);
                     $i = 0;
@@ -232,7 +229,7 @@ class GFUpdatePost
                     }
                     $j++;
                 }
-                $field['defaultValue']=$default;
+                $field['defaultValue'] = $default;
 
                 break;
 
@@ -240,10 +237,17 @@ class GFUpdatePost
 
                 if (is_array($value)) {
                     $value = implode(', ', $value);
+
                 }
 
-                $field['defaultValue'] = $value;
-
+//Youssef Fixed Bug
+                    $array = Array('number', 'text', 'radio');
+                    $field_value = rgpost("input_{$field['id']}");
+                    if (in_array($field['inputType'], $array) && empty($field_value) && !empty($_POST)) {
+                        $field['defaultValue']='';
+                    }else{
+                        $field['defaultValue'] = $value;
+                    }
                 break;
         }
 
@@ -349,9 +353,7 @@ class GFUpdatePost
         foreach ($form['fields'] as $field) {
             if ($field['type'] == 'post_custom_field' && isset($field['postCustomFieldUnique'])) {
                 $meta = get_post_meta($this->post['ID'], $field['postCustomFieldName']);
-
                 delete_post_meta($this->post['ID'], $field['postCustomFieldName']);
-
                 add_post_meta($this->post['ID'], $field['postCustomFieldName'], is_array($meta) && count($meta) == 1 ? $meta[0] : $meta, true);
             }
         }
@@ -373,7 +375,6 @@ class GFUpdatePost
         }
 
         $allowed = false;
-
         switch ($this->options['capabilities'][$type]) {
             case 'author':
 
@@ -384,7 +385,6 @@ class GFUpdatePost
                 break;
 
             case 'default':
-
                 $allowed = current_user_can($this->get_capability($type, $this->post['object']['post_type']));
 
                 break;
@@ -407,7 +407,6 @@ class GFUpdatePost
     private function get_capability($type, $post_type)
     {
         $capability = null;
-
         if (is_null($this->post['type_object'])) {
             $this->post['type_object'] = get_post_type_object($this->post['object']['post_type']);
         }
@@ -437,6 +436,7 @@ class GFUpdatePost
 
         echo '</pre>';
     }
+
 }
 
 ?>
